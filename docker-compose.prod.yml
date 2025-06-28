@@ -1,0 +1,178 @@
+services:
+  frontend:
+    build:
+      context: ./leaves
+      dockerfile: Dockerfile.prod
+      args:
+        - VITE_API_BASE_URL=http://localhost:3000
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - brainforest-network
+    restart: unless-stopped
+    user: root # Emergency: run as root to fix permissions
+    volumes:
+      - ./leaves/nginx.emergency.conf:/etc/nginx/conf.d/default.conf:ro
+      - letsencrypt_www:/var/www/certbot:ro
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./sap
+      dockerfile: Dockerfile.prod
+    ports:
+      - "${BACKEND_PORT:-3000}:8080"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://brain-forest.works,https://www.brain-forest.works}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - brainforest-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/info/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-brainforest}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - brainforest-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-brainforest}",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: >
+      postgres 
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+  # Redis for caching and sessions (optional)
+  redis:
+    image: redis:7-alpine
+    networks:
+      - brainforest-network
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled:ro
+      - ./nginx/proxy_params:/etc/nginx/proxy_params:ro
+      - letsencrypt_certs:/etc/letsencrypt:ro
+      - letsencrypt_www:/var/www/certbot:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - brainforest-network
+    restart: unless-stopped
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-brain-forest.works}
+      - API_DOMAIN=${API_DOMAIN:-api.brain-forest.works}
+
+  # Certbot for automatic SSL certificate management
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt_certs:/etc/letsencrypt
+      - letsencrypt_www:/var/www/certbot
+      - ./logs/certbot:/var/log/letsencrypt
+    networks:
+      - brainforest-network
+    environment:
+      - EMAIL=${SSL_EMAIL}
+      - DOMAIN_NAME=${DOMAIN_NAME:-brain-forest.works}
+      - API_DOMAIN=${API_DOMAIN:-api.brain-forest.works}
+    depends_on:
+      nginx:
+        condition: service_started
+    entrypoint: /bin/sh
+    command: -c "
+      echo 'Starting Certbot service...' &&
+      echo 'Waiting for nginx to be ready...' &&
+      sleep 30 &&
+      if [ ! -f /etc/letsencrypt/live/$${DOMAIN_NAME}/fullchain.pem ]; then
+      echo 'Obtaining initial certificates...' &&
+      certbot certonly --webroot -w /var/www/certbot --email $${EMAIL} --agree-tos --no-eff-email --force-renewal -d $${DOMAIN_NAME} -d www.$${DOMAIN_NAME} -d $${API_DOMAIN} --verbose;
+      fi &&
+      echo 'Starting certificate renewal daemon...' &&
+      while :; do
+      certbot renew --webroot -w /var/www/certbot --quiet &&
+      echo 'Certificate renewal completed' &&
+      (docker exec \$$(docker ps -q -f name=nginx) nginx -s reload || echo 'Nginx reload failed');
+      sleep 12h;
+      done"
+    restart: unless-stopped
+
+networks:
+  brainforest-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  letsencrypt_certs:
+    driver: local
+  letsencrypt_www:
+    driver: local

@@ -1,0 +1,265 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Vite build output
+dist/
+build/
+
+# Rollup.js default build output
+dist/
+
+# Svelte kit
+.svelte-kit
+
+# React build outputs
+build/
+
+# Bun
+.bun
+
+# TypeScript
+*.tsbuildinfo
+*.d.ts.map
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+desktop.ini
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# SSL/TLS certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+ssl/certs/
+ssl/private/
+certs/
+private/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Temporary folders
+tmp/
+temp/
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Backup files
+*.backup
+*.bak
+*.old
+backups/*.sql
+backups/*.zip
+
+# Package files
+*.tgz
+*.tar.gz
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.test
+.env.production
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Local development
+.local
+local/
+
+# Debug files
+*.map
+
+# Security and sensitive files
+secrets/
+.secrets
+config/local.json
+config/development.json
+config/production.json
+
+# Generated files
+generated/
+auto-generated/
+
+# Test files
+coverage/
+.nyc_output
+test-results/
+junit.xml
+
+# Monitoring and profiling
+.clinic/
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# Build artifacts
+*.exe
+*.msi
+*.deb
+*.rpm
+
+# Documentation build
+docs/build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pycache__/
+*.py[cod]
+*$py.class

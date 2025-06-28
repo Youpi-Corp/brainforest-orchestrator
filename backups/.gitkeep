@@ -1,0 +1,2 @@
+# Keep this file to ensure the backups directory is tracked in git
+# Database backups will be created here during production operations
