@@ -3,14 +3,13 @@ services:
     build:
       context: ./leaves
       dockerfile: Dockerfile
-      args:
-        - VITE_API_BASE_URL=http://localhost:3000
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
       - brainforest-network
+    restart: unless-stopped
 
   backend:
     build:
@@ -19,22 +18,31 @@ services:
     ports:
       - "3000:8080"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/brainforest
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/brainforest
+      - NODE_ENV=production
     depends_on:
       - db
     networks:
       - brainforest-network
+    restart: unless-stopped
 
   db:
-    image: postgres:16
+    image: postgres:16-alpine
     environment:
       - POSTGRES_DB=brainforest
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
     networks:
       - brainforest-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d brainforest"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   brainforest-network:
